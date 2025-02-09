@@ -19,7 +19,6 @@ st.set_page_config(
     page_title="Global Economic Analysis Agent",
     page_icon="🌍",
     layout="wide",
-    initial_sidebar_state="expanded"
 )
 
 # Enhanced CSS styling
@@ -322,18 +321,6 @@ st.markdown("""
         text-decoration: underline; /* Underline on hover */
     }
 
-    /* Sidebar Styling */
-    .stSidebar {
-        background-color: #f9f9f9; /* Very light grey sidebar background */
-    }
-    .stSidebar .stMarkdown h3 { /* Sidebar header styling */
-        color: #004A7F;
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin-bottom: 15px;
-        border-bottom: 2px solid #0078D4;
-        padding-bottom: 5px;
-    }
 
 </style>
 """, unsafe_allow_html=True)
@@ -574,55 +561,13 @@ Format the report in markdown with clear headers and subheaders. Be concise and 
 """
 
 
+# API Key retrieval from environment variable
+api_key = os.environ.get("GEMINI_API_KEY")
 
-
-# Sidebar configuration (same as before)
-with st.sidebar:
-    st.markdown("### ⚙️ Configuration") # Sidebar header - styled by CSS now
-
-    # API Key Management
-    # -------------------- IMPORTANT SECURITY WARNING --------------------
-    # Hardcoding your API key directly in the code is NOT recommended for
-    # production environments. This is for quick local testing and demonstration only.
-    # For production, use environment variables or secure secret management practices.
-    # --------------------------------------------------------------------
-    api_key = "AIzaSyB9ZnGupol-xHM9Yt_XCkQHXUMB7DHYLmk"  # <-----------------------  ENTER YOUR API KEY HERE!
-    genai.configure(api_key=api_key) # Configure genai here directly
-
-    st.success("API Key set successfully!", icon="✅")
-
-    # Display the API key text input, pre-filled and disabled for visibility (but not editable)
-    st.text_input("Gemini API Key", type="password", value=api_key, disabled=True)
-
-
-    # Advanced Settings
-    st.markdown("### 🔧 Advanced Settings") # Sidebar sub-header - styled by CSS
-
-    model_options = [
-        "gemini-2.0-flash",
-    ]
-    selected_model = st.selectbox(
-        "Model Version",
-        model_options,
-        index=0,
-        help="Select the Gemini model version for analysis"
-    )
-
-    temperature = st.slider(
-        "Temperature",
-        min_value=0.0,
-        max_value=1.0,
-        value=0.7,
-        step=0.1,
-        help="Adjust creativity level: Lower = more focused, Higher = more creative"
-    )
-
-    max_tokens = st.select_slider(
-        "Output Length",
-        options=[4096, 8192, 16384, 32768],
-        value=8192, # Default value set to a higher number for longer outputs
-        help="Select the maximum length of the generated analysis. Higher values result in more detailed and longer analysis." # Updated help text
-    )
+if api_key:
+    genai.configure(api_key=api_key)
+else:
+    st.error("🔑 Gemini API Key not found! Please set the `GEMINI_API_KEY` environment variable.")
 
 
 # Main content area (same as before, with changes in tabs[1])
@@ -705,8 +650,8 @@ def display_economic_news(country):
         return [] # Return empty list if no news
 
 if country_name:
-    if not api_key: # This check is technically redundant now but kept for clarity, you could remove it.
-        st.error("Please set your Gemini API Key in the sidebar to perform analysis.", icon="🔑")
+    if not api_key:
+        st.stop() # Stop execution if API key is missing as error is already shown
     else:
         # Create tabs for different sections
         tabs = st.tabs(["📈 Economic Analysis"])  # Removed "📰 News" tab
@@ -714,11 +659,17 @@ if country_name:
         with tabs[0]: # Economic Analysis Tab
             # Moved news fetching inside the analysis tab
             generation_config = {
-                "temperature": temperature,
+                "temperature": 0.7, # Default temperature as sidebar is removed
                 "top_p": 0.95,
                 "top_k": 64,
-                "max_output_tokens": max_tokens,
+                "max_output_tokens": 8192, # Default max_tokens as sidebar is removed
             }
+
+            model_options = [  # Default model options as sidebar is removed
+                "gemini-2.0-flash",
+            ]
+            selected_model = "gemini-2.0-flash" # Default selected model as sidebar is removed
+
 
             model = genai.GenerativeModel(
                 model_name=selected_model,
