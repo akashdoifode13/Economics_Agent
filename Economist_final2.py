@@ -19,8 +19,7 @@ st.set_page_config(
     page_title="Global Economic Analysis Agent",
     page_icon="🌍",
     layout="wide",
-    initial_sidebar_state="expanded",
-    theme={'base': 'light'}  # Set light mode as default
+    initial_sidebar_state="expanded"
 )
 
 # Enhanced CSS styling
