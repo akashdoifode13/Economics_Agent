@@ -5,4 +5,4 @@ beautifulsoup4
 pandas
 numpy
 newspaper3k
-lxml==5.2.0
+lxml[html_clean]==5.2.0
