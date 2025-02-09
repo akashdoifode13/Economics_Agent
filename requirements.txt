@@ -5,4 +5,4 @@ beautifulsoup4
 pandas
 numpy
 newspaper3k
-lxml==4.9.2  # Trying a specific older version
+lxml  #  <-- Just 'lxml' without '==4.9.2' or '==4.8.0'
