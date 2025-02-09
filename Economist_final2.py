@@ -359,7 +359,7 @@ def fetch_article_content(url):
         return "Could not fetch article details.", "No summary available"
 
 # News scraping function with detailed article content and GDP filtering
-def fetch_economic_news(country, num_articles=10): # Adjusted default to 10
+def fetch_economic_news(country, num_articles=5): # Adjusted default to 10
     """
     Improved news scraping function with detailed article content and GDP filtering
     """
