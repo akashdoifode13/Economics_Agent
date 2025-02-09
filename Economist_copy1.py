@@ -825,8 +825,8 @@ if country_name:
 st.markdown("""
 <div class="footer">
     <p>
-        Developed with ❤️ by a Akash Doifode |
-        <a href="https://www.example.com" target="_blank">Learn More</a>
+        Developed with ❤️ by Akash Doifode |
+        <a href="https://www.linkedin.com/in/akash-doifode-0784b826/" target="_blank">Connect on Linkedin</a>
     </p>
 </div>
 """, unsafe_allow_html=True)
