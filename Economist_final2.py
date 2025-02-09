@@ -19,7 +19,8 @@ st.set_page_config(
     page_title="Global Economic Analysis Agent",
     page_icon="🌍",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    theme={'base': 'light'}  # Set light mode as default
 )
 
 # Enhanced CSS styling
@@ -359,7 +360,7 @@ def fetch_article_content(url):
         return "Could not fetch article details.", "No summary available"
 
 # News scraping function with detailed article content and GDP filtering
-def fetch_economic_news(country, num_articles=5): # Adjusted default to 10
+def fetch_economic_news(country, num_articles=10): # Adjusted default to 10
     """
     Improved news scraping function with detailed article content and GDP filtering
     """
@@ -581,45 +582,49 @@ with st.sidebar:
     st.markdown("### ⚙️ Configuration") # Sidebar header - styled by CSS now
 
     # API Key Management
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        api_key = st.text_input("Enter Gemini API Key", type="password")
+    # -------------------- IMPORTANT SECURITY WARNING --------------------
+    # Hardcoding your API key directly in the code is NOT recommended for
+    # production environments. This is for quick local testing and demonstration only.
+    # For production, use environment variables or secure secret management practices.
+    # --------------------------------------------------------------------
+    api_key = "AIzaSyB9ZnGupol-xHM9Yt_XCkQHXUMB7DHYLmk"  # <-----------------------  ENTER YOUR API KEY HERE!
+    genai.configure(api_key=api_key) # Configure genai here directly
 
-    if api_key:
-        os.environ["GEMINI_API_KEY"] = api_key
-        genai.configure(api_key=api_key)
-        st.success("API Key set successfully!", icon="✅")
+    st.success("API Key set successfully!", icon="✅")
 
-        # Advanced Settings
-        st.markdown("### 🔧 Advanced Settings") # Sidebar sub-header - styled by CSS
+    # Display the API key text input, pre-filled and disabled for visibility (but not editable)
+    st.text_input("Gemini API Key", type="password", value=api_key, disabled=True)
 
-        model_options = [
-            "gemini-2.0-flash",
-        ]
-        selected_model = st.selectbox(
-            "Model Version",
-            model_options,
-            index=0,
-            help="Select the Gemini model version for analysis"
-        )
 
-        temperature = st.slider(
-            "Temperature",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.7,
-            step=0.1,
-            help="Adjust creativity level: Lower = more focused, Higher = more creative"
-        )
+    # Advanced Settings
+    st.markdown("### 🔧 Advanced Settings") # Sidebar sub-header - styled by CSS
 
-        max_tokens = st.select_slider(
-            "Output Length",
-            options=[4096, 8192, 16384, 32768],
-            value=8192, # Default value set to a higher number for longer outputs
-            help="Select the maximum length of the generated analysis. Higher values result in more detailed and longer analysis." # Updated help text
-        )
-    else:
-        st.warning("Please enter your Gemini API Key in the sidebar to use the analysis features.")
+    model_options = [
+        "gemini-2.0-flash",
+    ]
+    selected_model = st.selectbox(
+        "Model Version",
+        model_options,
+        index=0,
+        help="Select the Gemini model version for analysis"
+    )
+
+    temperature = st.slider(
+        "Temperature",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.7,
+        step=0.1,
+        help="Adjust creativity level: Lower = more focused, Higher = more creative"
+    )
+
+    max_tokens = st.select_slider(
+        "Output Length",
+        options=[4096, 8192, 16384, 32768],
+        value=8192, # Default value set to a higher number for longer outputs
+        help="Select the maximum length of the generated analysis. Higher values result in more detailed and longer analysis." # Updated help text
+    )
+
 
 # Main content area (same as before, with changes in tabs[1])
 col1, col2 = st.columns([2, 1])
@@ -701,7 +706,7 @@ def display_economic_news(country):
         return [] # Return empty list if no news
 
 if country_name:
-    if not api_key:
+    if not api_key: # This check is technically redundant now but kept for clarity, you could remove it.
         st.error("Please set your Gemini API Key in the sidebar to perform analysis.", icon="🔑")
     else:
         # Create tabs for different sections
