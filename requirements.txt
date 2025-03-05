@@ -1,0 +1,8 @@
+streamlit
+google-generativeai
+requests
+beautifulsoup4
+pandas
+numpy
+newspaper3k
+lxml[html_clean]
