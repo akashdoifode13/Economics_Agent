@@ -7,12 +7,4 @@ numpy
 newspaper3k
 lxml
 plotly
-difflib
-concurrent.futures
-os
-time
-datetime
-io
-re
-logging
 lxml[html_clean]
