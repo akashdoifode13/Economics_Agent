@@ -7,4 +7,5 @@ numpy
 newspaper3k
 lxml
 plotly
+openpyxl
 lxml[html_clean]
