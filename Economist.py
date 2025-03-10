@@ -450,6 +450,7 @@ def load_data(file_path, sheet_name, country, indicator_name):
         return None
 
 def analyze_country_charts(country, data_path):
+    matched_country = get_matching_country(country, None)
     datasets = {
         "GDP": {"file": f"{data_path}/GDP at market prices, current US$, millions, seas. adj..xlsx", "sheet": "annual"},
         "CPI": {"file": f"{data_path}/CPI Price, % y-o-y, nominal, seas. adj..xlsx", "sheet": "annual"},
@@ -469,7 +470,7 @@ def analyze_country_charts(country, data_path):
         data = load_data(params["file"], params["sheet"], country, indicator)
         dataset_title = os.path.basename(params["file"]).replace(".xlsx", "")
         if data is not None:
-            title = f"{dataset_title} Trend for {country_name}"
+            title = f"{dataset_title} Trend for {matched_country}"
             fig = px.line(data, x="Year", y=indicator, title=title)
             fig.update_traces(mode="lines+markers")
             st.plotly_chart(fig, use_container_width=True)
