@@ -4,17 +4,70 @@ from difflib import get_close_matches
 import logging
 import plotly.express as px
 import os
+from fuzzywuzzy import process
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 data_path =  "GemDataEXTR"
+
+
+
 def normalize_country(text):
-    # Remove all non-alphanumeric characters and convert to lower case.
+    # Remove all non-alphanumeric characters and convert to lower case
     return "".join(ch for ch in text.lower() if ch.isalnum())
 
-def get_matching_country(country, country_list):
+def get_matching_country(country, country_list=None):
+    # Normalize input
     norm_input = normalize_country(country)
     
+    # Comprehensive list of countries
+    all_countries = [
+        "Albania", "Advanced Economies", "Argentina", "Armenia", "Australia", "Austria", 
+        "Belgium", "Bulgaria", "Bahrain", "Bosnia and Herzegovina", "Belarus", "Bolivia", 
+        "Brazil", "Botswana", "Canada", "Switzerland", "Chile", "China", "Cameroon", 
+        "Colombia", "Costa Rica", "Cyprus", "Czech Republic", "Germany", "Denmark", 
+        "EMDE East Asia & Pacific", "EMDE Europe & Central Asia", "Ecuador", 
+        "Egypt, Arab Rep.", "Emerging Market and Developing Economies (EMDEs)", 
+        "Spain", "Estonia", "Finland", "France", "United Kingdom", "Georgia", "Ghana", 
+        "Greece", "Guatemala", "High Income Countries", "Hong Kong SAR, China", 
+        "Honduras", "Croatia", "Hungary", "Indonesia", "India", "Ireland", "Iceland", 
+        "Israel", "Italy", "Jamaica", "Jordan", "Japan", "Kazakhstan", "Kenya", 
+        "Korea, Rep.", "Kuwait", "EMDE Latin America & Caribbean", 
+        "Low-Income Countries (LIC)", "Sri Lanka", "Lithuania", "Luxembourg", "Latvia", 
+        "Morocco", "Moldova, Rep.", "Mexico", "Middle-Income Countries (MIC)", 
+        "North Macedonia", "Malta", "Mongolia", "EMDE Middle East & N. Africa", 
+        "Mauritius", "Malaysia", "Nigeria", "Nicaragua", "Netherlands", "Norway", 
+        "New Zealand", "Peru", "Philippines", "Poland", "Portugal", "Paraguay", 
+        "Romania", "Russian Federation", "EMDE South Asia", "Saudi Arabia", "Singapore", 
+        "El Salvador", "Serbia", "EMDE Sub-Saharan Africa", "Slovakia", "Slovenia", 
+        "Sweden", "Thailand", "Tunisia", "Turkey", "Taiwan, China", "Ukraine", 
+        "Uruguay", "United States", "Uzbekistan", "World (WBG members)", "South Africa",
+        "Afghanistan", "Algeria", "Angola", "Antigua and Barbuda", "Azerbaijan", 
+        "Bahamas", "Bangladesh", "Barbados", "Belize", "Benin", "Bhutan", 
+        "Brunei Darussalam", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", 
+        "Central African Republic", "Chad", "Comoros", "Congo, Dem. Rep.", 
+        "Congo, Rep.", "Côte d'Ivoire", "Cuba", "Djibouti", "Dominica", 
+        "Dominican Republic", "Equatorial Guinea", "Eritrea", "Eswatini", "Ethiopia", 
+        "Fiji", "Gabon", "Gambia", "Grenada", "Guinea", "Guinea-Bissau", "Guyana", 
+        "Haiti", "Iran, Islamic Rep.", "Iraq", "Kiribati", "Korea, Dem. People's Rep.", 
+        "Kyrgyz Republic", "Lao PDR", "Lebanon", "Lesotho", "Liberia", "Libya", 
+        "Madagascar", "Malawi", "Maldives", "Mali", "Marshall Islands", "Mauritania", 
+        "Micronesia, Fed. Sts.", "Montenegro", "Mozambique", "Myanmar", "Namibia", 
+        "Nauru", "Nepal", "Niger", "Oman", "Pakistan", "Palau", "Panama", 
+        "Papua New Guinea", "Qatar", "Rwanda", "Samoa", "San Marino", 
+        "São Tomé and Principe", "Senegal", "Seychelles", "Sierra Leone", 
+        "Solomon Islands", "Somalia", "South Sudan", "St. Kitts and Nevis", "St. Lucia", 
+        "St. Vincent and the Grenadines", "Sudan", "Suriname", "Syrian Arab Republic", 
+        "Tajikistan", "Tanzania", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", 
+        "Turkmenistan", "Tuvalu", "Uganda", "United Arab Emirates", "Vanuatu", 
+        "Venezuela, RB", "Vietnam", "Yemen, Rep.", "Zambia", "Zimbabwe"
+    ]
+    
+    # Use provided country_list or default to all_countries
+    if country_list is None:
+        country_list = all_countries
+
+
     # Original mapping: keys will be normalized.
     country_variants = {
     "us":"United States",   
@@ -320,22 +373,35 @@ def get_matching_country(country, country_list):
     "netherlands": "Netherlands",
     "holland": "Netherlands"
 }
-    
-    # Normalize the keys in the variants mapping.
+
+    # Normalize the keys in the variants mapping
     normalized_variants = {normalize_country(k): v for k, v in country_variants.items()}
-    if norm_input in normalized_variants:
-        return normalized_variants[norm_input]
     
-    # If no direct mapping, use difflib to search for a close match in the provided country_list.
-    normalized_list = [normalize_country(name) for name in country_list]
-    from difflib import get_close_matches
-    matches = get_close_matches(norm_input, normalized_list, n=1, cutoff=0.6)
-    if matches:
-        # Return the original version from country_list matching the normalized value.
-        for official in country_list:
-            if normalize_country(official) == matches[0]:
-                return official
+    # Check for direct match in variants
+    if norm_input in normalized_variants:
+        variant_match = normalized_variants[norm_input]
+        # Verify the variant match exists in country_list
+        for country_name in country_list:
+            if variant_match == country_name:
+                return variant_match
+    
+    # If no direct variant match found, use fuzzy matching
+    # First, try exact match on normalized country list
+    normalized_country_dict = {normalize_country(name): name for name in country_list}
+    if norm_input in normalized_country_dict:
+        return normalized_country_dict[norm_input]
+    
+    # If no exact match, use fuzzy matching with configurable threshold
+    match, score = process.extractOne(norm_input, [normalize_country(c) for c in country_list])
+    
+    if score >= 70:  # Slightly lower threshold without difflib fallback
+        # Map back to original name
+        for country_name in country_list:
+            if normalize_country(country_name) == match:
+                return country_name
+    
     return None
+
 
 def load_data(file_path, sheet_name, country, indicator_name):
     try:
@@ -373,6 +439,7 @@ def load_data(file_path, sheet_name, country, indicator_name):
         return None
 
 def analyze_country(country, data_path):
+    mapped_country = get_matching_country(country, None)
     datasets = {
         "GDP": {"file": f"{data_path}/GDP at market prices, current US$, millions, seas. adj..xlsx", "sheet": "annual"},
         "CPI": {"file": f"{data_path}/CPI Price, % y-o-y, nominal, seas. adj..xlsx", "sheet": "annual"},
@@ -391,7 +458,7 @@ def analyze_country(country, data_path):
         data = load_data(params["file"], params["sheet"], country, indicator)
         dataset_title = os.path.basename(params["file"]).replace(".xlsx", "")
         if data is not None:
-            title = f"{dataset_title} Trend for {country}"
+            title = f"{dataset_title} Trend for {mapped_country}"
             fig = px.line(data, x="Year", y=indicator, title=title)
             fig.update_traces(mode="lines+markers")
             st.plotly_chart(fig, use_container_width=True)
@@ -399,7 +466,6 @@ def analyze_country(country, data_path):
 
 def main():
     st.title("GDP Analysis Tool")
-    
     country = st.text_input("Country", "USA")
     if st.button("Analyze"):
         analyze_country(country, data_path)

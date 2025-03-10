@@ -9,3 +9,5 @@ lxml
 plotly
 openpyxl
 lxml[html_clean]
+python-Levenshtein
+fuzzywuzzy
